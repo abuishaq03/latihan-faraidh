@@ -276,20 +276,20 @@ const App = {
       <table class="faraidh-table">
         <thead>
           <tr>
-            <th>سهم</th>
-            <th>فرض</th>
             <th>وارث</th>
+            <th>فرض</th>
+            <th>سهم</th>
           </tr>
         </thead>
         <tbody>
           ${ex.answers
             .map((a, i) => `
             <tr>
-              <td><input type="text" id="sahm-${i}" placeholder="..." inputmode="numeric"></td>
+              <td class="heir-name">${a.heir}</td>
               <td>
                 ${this.renderFardOptions(i)}
               </td>
-              <td class="heir-name">${a.heir}</td>
+              <td><input type="text" id="sahm-${i}" placeholder="..." inputmode="numeric"></td>
             </tr>`)
             .join("")}
         </tbody>
