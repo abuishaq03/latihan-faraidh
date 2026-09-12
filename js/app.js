@@ -98,12 +98,10 @@ const App = {
   /* ═══ Home ═══ */
   renderHome() {
     return `
-      <h1 class="home-title">التدريب على الفرائض</h1>
-      <p class="home-subtitle">Latihan menghitung bagian ahli waris secara bertahap.</p>
+      <h1 class="home-title">تدريبات الفرائض</h1>
       <div class="home-menu">
         <button id="btn-list" class="home-btn primary">قائمة المسائل</button>
         <button id="btn-lessons" class="home-btn">الدروس</button>
-        <button id="btn-results" class="home-btn">نتائج التدريب</button>
       </div>
     `;
   },
@@ -114,9 +112,6 @@ const App = {
     };
     this.el("btn-lessons").onclick = () => {
       alert("الدروس - قريباً إن شاء الله");
-    };
-    this.el("btn-results").onclick = () => {
-      alert("لا توجد نتائج بعد - ابدأ التدريب أولاً");
     };
   },
 
