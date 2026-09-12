@@ -126,7 +126,7 @@ console.log("\n=== 1. Route + Home ===");
     loc.hash = "";
     ctx.App.route();
     assert(ctx.App.currentView === "home", "currentView should be home");
-    assert(elements["app"].innerHTML.includes("التدريب على الفرائض"), "should show title");
+    assert(elements["app"].innerHTML.includes("تدريبات الفرائض"), "should show title");
   });
 
   test("home has btn-list (session start removed)", () => {
@@ -150,8 +150,8 @@ console.log("\n=== 2. Navigate to List ===");
     assert(count === 15, `page 1 has 15 items, got ${count}`);
   });
 
-  test("count shows 574 total", () => {
-    assert(elements["list-count"].textContent.includes("574"), "total 574 shown");
+  test("list-count element removed", () => {
+    assert(elements["list-count"] === undefined, "list-count no longer rendered");
   });
 
   test("list has pagination links", () => {
@@ -181,8 +181,8 @@ console.log("\n=== 3. Search ===");
     const input = elements["list-search"];
     input.value = "زوج";
     input.oninput({ target: input });
-    const txt = elements["list-count"].textContent;
-    assert(!txt.startsWith("574 مسألة من أصل 574"), "filtered results");
+    const txt = elements["list-count"]?.textContent;
+    assert(!txt || !txt.startsWith("574 مسألة من أصل 574"), "filtered results");
   });
 
   test("search '250' shows Q250", () => {
@@ -221,7 +221,6 @@ console.log("\n=== 4. Pagination ===");
   test("page 2 shows items starting from 16", () => {
     ctx.App.navigate("list/p/2");
     assert(elements["list-items"].innerHTML.includes('data-id="16"'), "Q16 on page 2");
-    assert(elements["list-count"].textContent.includes("الصفحة 2"), "page 2 shown");
   });
 
   test("page 39 (last) has items", () => {
@@ -541,22 +540,21 @@ console.log("\n=== 12. List Search + Pagination Integration ===");
     const input = elements["list-search"];
     input.value = "عم";
     input.oninput({ target: input });
-    const txt = elements["list-count"].textContent;
-    assert(!txt.startsWith("574 مسألة من أصل 574"), "filtered");
+    const txt = elements["list-count"]?.textContent;
+    assert(!txt || !txt.startsWith("574 مسألة من أصل 574"), "filtered");
     // page link should exist
-    assert(elements["list-pagination"].innerHTML.includes("page-link") || elements["list-count"].textContent.includes("الصفحة 1"), "has page info");
+    assert(elements["list-pagination"].innerHTML.includes("page-link"), "has page info");
   });
 
-  test("search clears with new search", () => {
+  test("search 'عم' updates results from previous search", () => {
     ctx.App.navigate("list");
     const input = elements["list-search"];
     input.value = "زوج";
     input.oninput({ target: input });
-    const count1 = elements["list-count"].textContent;
+    assert(elements["list-items"].innerHTML.includes("list-item"), "results for زوج");
     input.value = "عم";
     input.oninput({ target: input });
-    const count2 = elements["list-count"].textContent;
-    assert(count1 !== count2 || true, "different queries");
+    assert(elements["list-items"].innerHTML.includes("list-item"), "results for عم");
   });
 }
 

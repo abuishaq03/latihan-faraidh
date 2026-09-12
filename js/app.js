@@ -124,7 +124,6 @@ const App = {
       <button id="btn-home" class="top-link">العودة للرئيسية</button>
       <input type="search" id="list-search" class="list-search"
              placeholder="ابحث برقم المسألة أو اسم الوارث..." value="${this.escHtml(this.listState.query)}">
-      <div id="list-count" class="list-count"></div>
       <div id="list-items" class="list-items"></div>
       <div id="list-pagination" class="list-pagination"></div>
     `;
@@ -149,9 +148,6 @@ const App = {
 
     const start = (this.listState.page - 1) * LIST_PER_PAGE;
     const pageItems = filtered.slice(start, start + LIST_PER_PAGE);
-
-    this.el("list-count").textContent =
-      `${filtered.length} مسألة من أصل ${all.length} - الصفحة ${this.listState.page} من ${totalPages}`;
 
     if (pageItems.length === 0) {
       this.el("list-items").innerHTML =
