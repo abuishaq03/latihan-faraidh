@@ -267,7 +267,6 @@ const App = {
       <div class="exercise-header">التدريب على الفرائض</div>
       <div class="progress">المسألة رقم ${ex.id}</div>
 
-      <div class="question-label">المسألة رقم ${ex.id}</div>
       <div class="heirs-list">${ex.heirs.join(" ، ")}</div>
 
       <div class="section-title">أصل المسألة</div>
