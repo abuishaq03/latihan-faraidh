@@ -239,7 +239,6 @@ const App = {
     if (!ex) {
       return `
         ${backBtn}
-        <h1 class="home-title">تدريبات الفرائض</h1>
         <div class="feedback">
           <div class="feedback-label">المسألة غير موجودة أو لا توجد مسائل متاحة.</div>
         </div>
@@ -248,7 +247,6 @@ const App = {
 
     if (FaraidhStore.isSkippable(ex)) {
       return `
-        <h1 class="home-title">تدريبات الفرائض</h1>
         <div class="feedback">
           <div class="feedback-label">هذه المسألة بحاجة إلى مراجعة.</div>
           <div class="feedback-correct-answer">المسألة رقم ${ex.id} لم يتم تحديد مفتاح إجابتها بشكل آمن.</div>
@@ -264,7 +262,6 @@ const App = {
 
     return `
       ${backBtn}
-      <h1 class="home-title">تدريبات الفرائض</h1>
       <div class="progress">المسألة رقم ${ex.id}</div>
 
       <div class="heirs-list">${ex.heirs.join(" ، ")}</div>
