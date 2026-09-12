@@ -129,11 +129,11 @@ console.log("\n=== 1. Route + Home ===");
     assert(elements["app"].innerHTML.includes("التدريب على الفرائض"), "should show title");
   });
 
-  test("home has btn-start and btn-list", () => {
+  test("home has btn-list (session start removed)", () => {
     ctx.App.route();
-    assert(elements["btn-start"] !== undefined, "btn-start exists");
     assert(elements["btn-list"] !== undefined, "btn-list exists");
     assert(elements["btn-list"].innerHTML.includes("قائمة المسائل"), "list btn text");
+    assert(!elements["app"].innerHTML.includes("ابدأ التدريب"), "start btn removed");
   });
 }
 
@@ -314,25 +314,7 @@ console.log("\n=== 6. Review / Skippable Questions ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 7. Session Mode ===");
-{
-  const { ctx, elements, loc } = setup();
-
-  test("startSession → session of 10, mode=session", () => {
-    ctx.App.startSession();
-    assert(ctx.App.mode === "session", "mode session");
-    assert(ctx.App.session.length === 10, "10 questions");
-    assert(ctx.App.currentView === "exercise");
-    assert(elements["app"].innerHTML.includes("السؤال 1 من 10"), "progress shown");
-  });
-
-  test("session progress shows ordinal", () => {
-    assert(elements["app"].innerHTML.includes("الأول"), "ordinal for Q1");
-  });
-}
-
-/* ═══════════════════════════════════════════════ */
-console.log("\n=== 8. Check Answers + Feedback ===");
+console.log("\n=== 7. Check Answers + Feedback ===");
 {
   const { ctx, elements, loc } = setup();
 
@@ -349,33 +331,41 @@ console.log("\n=== 8. Check Answers + Feedback ===");
     assert(!elements["btn-check"] || elements["btn-check"].style.display === "none", "check hidden");
   });
 
-  test("session mode: checkAnswers shows next button (not last)", () => {
-    ctx.App.startSession();
-    ctx.App.currentIndex = 0;
+  test("empty answers → blocked with warning, not graded", () => {
+    ctx.ProgressStore.data = {};
+    ctx.App.navigate("latihan/1");
     const q = ctx.App.session[0];
-    ctx.App.fardSelections = new Array(q.answers.length).fill("1/2");
+    ctx.App.fardSelections = new Array(q.answers.length).fill("");
     ctx.App.fardActiveBtn = new Array(q.answers.length).fill(null);
-    elements["inp-asal"] = { value: String(q.asalMasalah) };
-    q.answers.forEach((_, i) => { elements["sahm-" + i] = { value: String(q.answers[i].sahm) }; });
+    elements["inp-asal"] = new MockElement("input", "inp-asal", elements);
+    q.answers.forEach((_, i) => { elements["sahm-" + i] = new MockElement("input", `sahm-${i}`, elements); });
+    elements["feedback-area"] = new MockElement("div", "feedback-area", elements);
     ctx.App.checkAnswers();
-    assert(elements["nav-area"].innerHTML.includes("btn-next"), "next button shown");
+    assert(elements["feedback-area"].innerHTML.includes("يرجى إكمال"), "warning shown");
+    assert(!elements["feedback-area"].innerHTML.includes("الحل"), "no solution shown");
+    assert(ctx.ProgressStore.getStatus(1) === "unstarted", "not graded");
   });
 
-  test("session: last question check → finish button", () => {
-    ctx.App.startSession();
-    ctx.App.currentIndex = 9;
-    const q = ctx.App.session[9];
-    ctx.App.fardSelections = new Array(q.answers.length).fill("1/2");
+  test("missing asal only → warning + not graded", () => {
+    ctx.ProgressStore.data = {};
+    ctx.App.navigate("latihan/1");
+    const q = ctx.App.session[0];
+    ctx.App.fardSelections = q.answers.map((a) => a.fardh);
     ctx.App.fardActiveBtn = new Array(q.answers.length).fill(null);
-    elements["inp-asal"] = { value: String(q.asalMasalah) };
-    q.answers.forEach((_, i) => { elements["sahm-" + i] = { value: String(q.answers[i].sahm) }; });
+    elements["inp-asal"] = new MockElement("input", "inp-asal", elements);
+    q.answers.forEach((_, i) => {
+      elements["sahm-" + i] = new MockElement("input", `sahm-${i}`, elements);
+      elements["sahm-" + i].value = String(q.answers[i].sahm);
+    });
+    elements["feedback-area"] = new MockElement("div", "feedback-area", elements);
     ctx.App.checkAnswers();
-    assert(elements["nav-area"].innerHTML.includes("btn-finish"), "finish button shown");
+    assert(elements["feedback-area"].innerHTML.includes("يرجى إكمال"), "warning shown");
+    assert(ctx.ProgressStore.getStatus(1) === "unstarted", "not graded");
   });
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 9. Status Tracking (localStorage) ===");
+console.log("\n=== 8. Status Tracking (localStorage) ===");
 {
   const { ctx, elements, loc, localStorage } = setup();
 
@@ -423,39 +413,7 @@ console.log("\n=== 9. Status Tracking (localStorage) ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 10. Result Page + Navigation ===");
-{
-  const { ctx, elements, loc } = setup();
-
-  test("result page renders with score", () => {
-    ctx.App.startSession();
-    ctx.App.results = ctx.App.session.map(() => ({ allCorrect: false }));
-    ctx.App.score = 3;
-    ctx.App.currentView = "result";
-    ctx.App.render();
-    assert(elements["app"].innerHTML.includes("3 / 10"), "score shown");
-    assert(elements["app"].innerHTML.includes("30%"), "percent shown");
-  });
-
-  test("result has btn-to-list", () => {
-    assert(elements["btn-to-list"] !== undefined, "back to list btn exists");
-  });
-
-  test("result btn-to-list navigates to list", () => {
-    elements["btn-to-list"].onclick();
-    assert(ctx.App.currentView === "list", "navigated to list");
-  });
-
-  test("result btn-restart navigates to home", () => {
-    ctx.App.currentView = "result";
-    ctx.App.render();
-    elements["btn-restart"].onclick();
-    assert(ctx.App.currentView === "home", "navigated to home");
-  });
-}
-
-/* ═══════════════════════════════════════════════ */
-console.log("\n=== 11. Hash Change Event ===");
+console.log("\n=== 9. Hash Change Event ===");
 {
   const { ctx, elements, loc } = setup();
 
@@ -472,7 +430,7 @@ console.log("\n=== 11. Hash Change Event ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 12. Answer Key Integrity ===");
+console.log("\n=== 10. Answer Key Integrity ===");
 {
   const { ctx, elements, loc } = setup();
 
@@ -513,7 +471,7 @@ console.log("\n=== 12. Answer Key Integrity ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 13. Full User Flow ===");
+console.log("\n=== 11. Full User Flow ===");
 {
   const { ctx, elements, loc } = setup();
 
@@ -574,7 +532,7 @@ console.log("\n=== 13. Full User Flow ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 14. List Search + Pagination Integration ===");
+console.log("\n=== 12. List Search + Pagination Integration ===");
 {
   const { ctx, elements, loc } = setup();
 

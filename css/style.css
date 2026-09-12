@@ -442,6 +442,27 @@ body {
   background: #7a5c10;
 }
 
+/* ─── Required Fields Validation ─── */
+.input-error,
+.input-error:focus {
+  border-color: var(--wrong) !important;
+  background: #fdecea;
+}
+
+.fard-grid.input-error {
+  border: 1.5px solid var(--wrong);
+  border-radius: 5px;
+}
+
+.feedback.warning {
+  border-color: #e0b26a;
+  background: #fdf3e0;
+}
+
+.feedback.warning .feedback-label {
+  color: #b26a00;
+}
+
 /* ─── Feedback ─── */
 .feedback {
   background: var(--card-bg);

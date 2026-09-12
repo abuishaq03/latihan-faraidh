@@ -1,4 +1,3 @@
-const SESSION_LIMIT = 10;
 const LIST_PER_PAGE = 15;
 
 const FARD_OPTIONS = [
@@ -17,11 +16,9 @@ const App = {
   currentView: "home",
   currentIndex: 0,
   session: [],
-  results: [],
-  score: 0,
   fardSelections: [],
   fardActiveBtn: [],
-  mode: "session",
+  mode: "single",
   listState: { query: "", page: 1 },
 
   el(id) {
@@ -69,18 +66,6 @@ const App = {
   applyExerciseHash(h) {
     const arg = h.slice("latihan/".length);
 
-    if (arg === "sesi") {
-      this.mode = "session";
-      if (this.session.length === 0) {
-        this.session = FaraidhStore.buildSession(SESSION_LIMIT);
-        this.currentIndex = 0;
-        this.results = [];
-        this.score = 0;
-      }
-      this.currentView = "exercise";
-      return;
-    }
-
     const id = parseInt(arg, 10);
     const q = FaraidhStore.getQuestionById(id);
     this.mode = "single";
@@ -90,8 +75,6 @@ const App = {
       this.session = [];
     }
     this.currentIndex = 0;
-    this.results = [];
-    this.score = 0;
     this.currentView = q ? "exercise" : "list";
   },
 
@@ -109,10 +92,6 @@ const App = {
         app.innerHTML = this.renderExercise();
         this.bindExercise();
         break;
-      case "result":
-        app.innerHTML = this.renderResult();
-        this.bindResult();
-        break;
     }
   },
 
@@ -122,8 +101,7 @@ const App = {
       <h1 class="home-title">التدريب على الفرائض</h1>
       <p class="home-subtitle">Latihan menghitung bagian ahli waris secara bertahap.</p>
       <div class="home-menu">
-        <button id="btn-start" class="home-btn primary">ابدأ التدريب</button>
-        <button id="btn-list" class="home-btn">قائمة المسائل</button>
+        <button id="btn-list" class="home-btn primary">قائمة المسائل</button>
         <button id="btn-lessons" class="home-btn">الدروس</button>
         <button id="btn-results" class="home-btn">نتائج التدريب</button>
       </div>
@@ -131,9 +109,6 @@ const App = {
   },
 
   bindHome() {
-    this.el("btn-start").onclick = () => {
-      this.startSession();
-    };
     this.el("btn-list").onclick = () => {
       this.navigate("list");
     };
@@ -143,14 +118,6 @@ const App = {
     this.el("btn-results").onclick = () => {
       alert("لا توجد نتائج بعد - ابدأ التدريب أولاً");
     };
-  },
-
-  startSession() {
-    this.session = FaraidhStore.buildSession(SESSION_LIMIT);
-    this.currentIndex = 0;
-    this.results = [];
-    this.score = 0;
-    this.navigate("latihan/sesi");
   },
 
   /* ═══ Question List ═══ */
@@ -275,7 +242,6 @@ const App = {
 
   /* ═══ Exercise ═══ */
   renderExercise() {
-    const total = this.session.length;
     const ex = this.session[this.currentIndex];
     const backBtn = `<button id="btn-back-list" class="top-link">العودة إلى قائمة المسائل</button>`;
 
@@ -290,17 +256,13 @@ const App = {
     }
 
     if (FaraidhStore.isSkippable(ex)) {
-      const nav =
-        this.mode === "single"
-          ? `<button id="btn-back-list" class="nav-btn">العودة إلى قائمة المسائل</button>`
-          : `<button id="btn-next" class="nav-btn">السؤال التالي</button>`;
       return `
         <div class="exercise-header">التدريب على الفرائض</div>
         <div class="feedback">
           <div class="feedback-label">هذه المسألة بحاجة إلى مراجعة.</div>
           <div class="feedback-correct-answer">المسألة رقم ${ex.id} لم يتم تحديد مفتاح إجابتها بشكل آمن.</div>
         </div>
-        ${nav}
+        <button id="btn-back-list" class="nav-btn">العودة إلى قائمة المسائل</button>
       `;
     }
 
@@ -310,13 +272,9 @@ const App = {
     return `
       ${backBtn}
       <div class="exercise-header">التدريب على الفرائض</div>
-      ${
-        this.mode === "single"
-          ? `<div class="progress">المسألة رقم ${ex.id}</div>`
-          : `<div class="progress">السؤال ${this.currentIndex + 1} من ${total}</div>`
-      }
+      <div class="progress">المسألة رقم ${ex.id}</div>
 
-      <div class="question-label">${this.mode === "single" ? `المسألة رقم ${ex.id}` : `السؤال ${this.ordinal(this.currentIndex + 1)}`}</div>
+      <div class="question-label">المسألة رقم ${ex.id}</div>
       <div class="heirs-list">${ex.heirs.join(" ، ")}</div>
 
       <div class="section-title">أصل المسألة</div>
@@ -379,16 +337,17 @@ const App = {
     }
 
     if (FaraidhStore.isSkippable(ex)) {
-      const nextBtn = this.el("btn-next");
-      if (nextBtn) {
-        nextBtn.onclick = () => this.nextQuestion();
-      }
       return;
     }
 
     btnCheck.onclick = () => this.checkAnswers();
 
+    this.el("inp-asal").oninput = () => this.clearFieldError("inp-asal");
+
     ex.answers.forEach((_, heirIndex) => {
+      this.el(`sahm-${heirIndex}`).oninput = () =>
+        this.clearFieldError(`sahm-${heirIndex}`);
+
       FARD_OPTIONS.forEach((opt, optIndex) => {
         this.el(`fard-opt-${heirIndex}-${optIndex}`).onclick = () => {
           const prev = this.fardActiveBtn[heirIndex];
@@ -397,6 +356,7 @@ const App = {
           btn.classList.add("active");
           this.fardActiveBtn[heirIndex] = btn;
           this.fardSelections[heirIndex] = opt.value;
+          this.clearFieldError(`fard-cell-${heirIndex}`);
         };
       });
     });
@@ -404,6 +364,13 @@ const App = {
 
   checkAnswers() {
     const ex = this.session[this.currentIndex];
+
+    const missing = this.findMissingAnswers(ex);
+    if (missing.length > 0) {
+      this.showRequiredWarning(missing.length);
+      return;
+    }
+
     const userAnswers = {
       asalMasalah: this.el("inp-asal").value,
       heirs: ex.answers.map((_, i) => ({
@@ -413,9 +380,7 @@ const App = {
     };
 
     const result = AnswerChecker.validateAnswer(userAnswers, ex);
-    this.results.push(result);
     if (result.allCorrect) {
-      this.score++;
       ProgressStore.setCorrect(ex.id);
     } else {
       ProgressStore.setAttempted(ex.id);
@@ -424,31 +389,47 @@ const App = {
     this.showFeedback(result, ex, userAnswers);
     this.el("btn-check").style.display = "none";
 
-    if (this.mode === "single") {
-      this.el("nav-area").innerHTML = `
-        <button id="btn-back-list" class="nav-btn">العودة إلى قائمة المسائل</button>
-      `;
-      this.el("btn-back-list").onclick = () => this.navigate("list");
-    } else if (this.currentIndex < this.session.length - 1) {
-      this.el("nav-area").innerHTML = `
-        <button id="btn-next" class="nav-btn">السؤال التالي</button>
-      `;
-      this.el("btn-next").onclick = () => this.nextQuestion();
-    } else {
-      this.el("nav-area").innerHTML = `
-        <button id="btn-finish" class="nav-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);">انتهى التدريب</button>
-      `;
-      this.el("btn-finish").onclick = () => {
-        this.currentView = "result";
-        this.render();
-      };
-    }
+    this.el("nav-area").innerHTML = `
+      <button id="btn-back-list" class="nav-btn">العودة إلى قائمة المسائل</button>
+    `;
+    this.el("btn-back-list").onclick = () => this.navigate("list");
   },
 
-  nextQuestion() {
-    this.currentIndex++;
-    this.currentView = "exercise";
-    this.render();
+  findMissingAnswers(ex) {
+    const missing = [];
+    const asalEl = this.el("inp-asal");
+    if (!String(asalEl.value).trim()) {
+      missing.push("inp-asal");
+      asalEl.classList.add("input-error");
+    }
+    ex.answers.forEach((_, i) => {
+      const sahmEl = this.el(`sahm-${i}`);
+      if (!String(sahmEl.value).trim()) {
+        missing.push(`sahm-${i}`);
+        sahmEl.classList.add("input-error");
+      }
+      if (!this.fardSelections[i]) {
+        missing.push(`fard-${i}`);
+        const cell = this.el(`fard-cell-${i}`);
+        if (cell && cell.classList) cell.classList.add("input-error");
+      }
+    });
+    return missing;
+  },
+
+  showRequiredWarning(count) {
+    const fb = this.el("feedback-area");
+    fb.innerHTML = `
+      <div class="feedback warning">
+        <div class="feedback-label">يرجى إكمال جميع الحقول المطلوبة قبل التحقق</div>
+        <div class="feedback-correct-answer">أصل المسألة، فرض وسهم كل وارث إلزامية. (${count} حقل فارغ)</div>
+      </div>
+    `;
+  },
+
+  clearFieldError(id) {
+    const el = this.el(id);
+    if (el && el.classList) el.classList.remove("input-error");
   },
 
   showFeedback(result, ex, userAnswers) {
@@ -500,38 +481,6 @@ const App = {
     fb.innerHTML = html;
   },
 
-  /* ═══ Result ═══ */
-  renderResult() {
-    const total = this.session.length;
-    const wrong = total - this.score;
-    const pct = Math.round((this.score / total) * 100);
-
-    return `
-      <div class="result-title">انتهى التدريب</div>
-      <div class="result-card">
-        <div class="result-score">النتيجة: ${this.score} / ${total}</div>
-        <div class="result-percent">النسبة: ${pct}%</div>
-        <div class="result-details">
-          <span class="result-correct">✓ ${this.score} إجابة صحيحة</span>
-          <span class="result-wrong">✗ ${wrong} إجابة خاطئة</span>
-        </div>
-      </div>
-      <button id="btn-restart" class="restart-btn">إعادة التدريب</button>
-      <div class="result-actions">
-        <button id="btn-to-list" class="nav-btn">العودة إلى قائمة المسائل</button>
-      </div>
-    `;
-  },
-
-  bindResult() {
-    this.el("btn-restart").onclick = () => {
-      this.navigate("");
-    };
-    this.el("btn-to-list").onclick = () => {
-      this.navigate("list");
-    };
-  },
-
   /* ═══ Helpers ═══ */
   escHtml(str) {
     return String(str)
@@ -539,14 +488,6 @@ const App = {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
-  },
-
-  ordinal(n) {
-    const ordinals = [
-      "الأول", "الثاني", "الثالث", "الرابع", "الخامس",
-      "السادس", "السابع", "الثامن", "التاسع", "العاشر"
-    ];
-    return ordinals[n - 1] || n;
   },
 };
 
