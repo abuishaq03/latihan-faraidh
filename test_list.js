@@ -303,11 +303,11 @@ console.log("\n=== 6. Review / Skippable Questions ===");
   });
 
   test("needsReview question in list shows مراجعة badge", () => {
-    // find a needsReview question
+    // only Q423 remains needsReview; it sits on page 29 (421-435)
     const reviewQ = ctx.FaraidhStore.allQuestions().find((q) => q.needsReview === true);
     assert(reviewQ, "there is a needsReview question");
-    ctx.App.navigate("list");
-    // it may be on a different page; just check the badge class exists in the list
+    const page = Math.ceil(reviewQ.id / 15);
+    ctx.App.navigate("list/p/" + page);
     assert(elements["list-items"].innerHTML.includes("badge-review"), "review badge on page");
   });
 }
@@ -620,8 +620,9 @@ console.log("\n=== 13. Prev/Next Navigation ===");
     q.answers.forEach((_, i) => { elements["sahm-" + i] = { value: "50" }; });
     ctx.App.checkAnswers();
     assert(elements["btn-check"].style.display === "none", "check hidden");
+    const expected = ctx.App.getNav().next;
     elements["btn-next"].onclick();
-    assert(ctx.App.session[0].id === 3, "next still works after check");
+    assert(ctx.App.session[0].id === expected, "next still works after check");
   });
 }
 
