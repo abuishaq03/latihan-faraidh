@@ -558,6 +558,73 @@ console.log("\n=== 12. List Search + Pagination Integration ===");
   });
 }
 
+/* ═══════════════════════════════════════════════ */
+console.log("\n=== 13. Prev/Next Navigation ===");
+{
+  const { ctx, elements, loc } = setup();
+
+  test("open Q3 → action-row has prev & next buttons", () => {
+    ctx.App.navigate("latihan/3");
+    assert(elements["app"].innerHTML.includes("action-row"), "action-row rendered");
+    assert(elements["btn-prev"] !== undefined, "btn-prev exists");
+    assert(elements["btn-next"] !== undefined, "btn-next exists");
+    assert(elements["btn-check"] !== undefined, "btn-check exists");
+  });
+
+  test("Q3 → click next goes to next available question", () => {
+    ctx.App.navigate("latihan/3");
+    const expected = ctx.App.getNav().next;
+    elements["btn-next"].onclick();
+    assert(ctx.App.currentView === "exercise", "still exercise");
+    assert(ctx.App.session[0].id === expected, `next id = ${ctx.App.session[0].id}, expected ${expected}`);
+  });
+
+  test("Q3 → click prev goes to previous available question", () => {
+    ctx.App.navigate("latihan/3");
+    const expected = ctx.App.getNav().prev;
+    elements["btn-prev"].onclick();
+    assert(ctx.App.currentView === "exercise", "still exercise");
+    assert(ctx.App.session[0].id === expected, `prev id = ${ctx.App.session[0].id}, expected ${expected}`);
+  });
+
+  test("Q1 → prev button disabled", () => {
+    ctx.App.navigate("latihan/1");
+    assert(elements["btn-prev"].onclick === null, "btn-prev not bound");
+    assert(elements["btn-next"].onclick !== null, "btn-next bound");
+  });
+
+  test("Q574 → next button disabled", () => {
+    ctx.App.navigate("latihan/574");
+    assert(elements["btn-next"].onclick === null, "btn-next not bound");
+    assert(elements["btn-prev"].onclick !== null, "btn-prev bound");
+  });
+
+  test("Q422 → next skips review Q423 to Q424", () => {
+    ctx.App.navigate("latihan/422");
+    elements["btn-next"].onclick();
+    assert(ctx.App.session[0].id === 424, `skipped to ${ctx.App.session[0].id}`);
+  });
+
+  test("Q424 → prev skips review Q423 back to Q422", () => {
+    ctx.App.navigate("latihan/424");
+    elements["btn-prev"].onclick();
+    assert(ctx.App.session[0].id === 422, `prev to ${ctx.App.session[0].id}`);
+  });
+
+  test("after checkAnswers prev/next still work", () => {
+    ctx.App.navigate("latihan/1");
+    const q = ctx.App.session[0];
+    ctx.App.fardSelections = new Array(q.answers.length).fill("1/2");
+    ctx.App.fardActiveBtn = new Array(q.answers.length).fill(null);
+    elements["inp-asal"] = { value: "300" };
+    q.answers.forEach((_, i) => { elements["sahm-" + i] = { value: "50" }; });
+    ctx.App.checkAnswers();
+    assert(elements["btn-check"].style.display === "none", "check hidden");
+    elements["btn-next"].onclick();
+    assert(ctx.App.session[0].id === 3, "next still works after check");
+  });
+}
+
 /* ═══ SUMMARY ═══ */
 console.log(`\n${"═".repeat(40)}`);
 console.log(`  PASSED: ${passed}`);

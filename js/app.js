@@ -260,6 +260,8 @@ const App = {
     this.fardSelections = new Array(ex.answers.length).fill("");
     this.fardActiveBtn = new Array(ex.answers.length).fill(null);
 
+    const nav = this.getNav();
+
     return `
       ${backBtn}
       <div class="exercise-header">التدريب على الفرائض</div>
@@ -294,10 +296,26 @@ const App = {
         </tbody>
       </table>
 
-      <button id="btn-check" class="check-btn">تحقق من الإجابة</button>
+      <div class="action-row">
+        <button id="btn-prev" class="action-btn ${nav.prev ? "" : "disabled"}">السابق</button>
+        <button id="btn-check" class="check-btn">تحقق من الإجابة</button>
+        <button id="btn-next" class="action-btn ${nav.next ? "" : "disabled"}">التالي</button>
+      </div>
       <div id="feedback-area"></div>
       <div id="nav-area"></div>
     `;
+  },
+
+  getNav() {
+    const ex = this.session[this.currentIndex];
+    if (!ex) return { prev: null, next: null };
+    const list = FaraidhStore.availableQuestions();
+    const idx = list.findIndex((q) => q.id === ex.id);
+    if (idx < 0) return { prev: null, next: null };
+    return {
+      prev: idx > 0 ? list[idx - 1].id : null,
+      next: idx >= 0 && idx < list.length - 1 ? list[idx + 1].id : null,
+    };
   },
 
   renderFardOptions(heirIndex) {
@@ -332,6 +350,14 @@ const App = {
     }
 
     btnCheck.onclick = () => this.checkAnswers();
+
+    const nav = this.getNav();
+    this.el("btn-prev").onclick = nav.prev
+      ? () => this.navigate("latihan/" + nav.prev)
+      : null;
+    this.el("btn-next").onclick = nav.next
+      ? () => this.navigate("latihan/" + nav.next)
+      : null;
 
     this.el("inp-asal").oninput = () => this.clearFieldError("inp-asal");
 
