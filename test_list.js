@@ -293,22 +293,22 @@ console.log("\n=== 5. Single Question Exercise (by ID) ===");
 }
 
 /* ═══════════════════════════════════════════════ */
-console.log("\n=== 6. Review / Skippable Questions ===");
+console.log("\n=== 6. No Skippable / Review Questions ===");
 {
   const { ctx, elements, loc } = setup();
 
-  test("Q423 shows review message", () => {
-    ctx.App.navigate("latihan/423");
-    assert(elements["app"].innerHTML.includes("بحاجة إلى مراجعة"), "review msg shown");
+  test("all 573 questions are passable (none skippable)", () => {
+    const all = ctx.FaraidhStore.allQuestions();
+    assert(all.length === 573, `count = ${all.length}`);
+    assert(all.every((q) => !ctx.FaraidhStore.isSkippable(q)), "none skippable");
+    const avail = ctx.FaraidhStore.availableQuestions();
+    assert(avail.length === 573, `available = ${avail.length}`);
   });
 
-  test("needsReview question in list shows مراجعة badge", () => {
-    // only Q423 remains needsReview; it sits on page 29 (421-435)
-    const reviewQ = ctx.FaraidhStore.allQuestions().find((q) => q.needsReview === true);
-    assert(reviewQ, "there is a needsReview question");
-    const page = Math.ceil(reviewQ.id / 15);
-    ctx.App.navigate("list/p/" + page);
-    assert(elements["list-items"].innerHTML.includes("badge-review"), "review badge on page");
+  test("Q423 was removed — no review message shown", () => {
+    ctx.App.navigate("latihan/423");
+    assert(ctx.App.currentView === "list", "falls back to list");
+    assert(!elements["app"].innerHTML.includes("بحاجة إلى مراجعة"), "no review msg");
   });
 }
 
@@ -433,11 +433,15 @@ console.log("\n=== 10. Answer Key Integrity ===");
 {
   const { ctx, elements, loc } = setup();
 
-  test("574 questions, all IDs accessible", () => {
+  test("573 questions, all ID 1..574 accessible except Q423", () => {
     const all = ctx.FaraidhStore.allQuestions();
-    assert(all.length === 574, `count = ${all.length}`);
+    assert(all.length === 573, `count = ${all.length}`);
     for (let i = 1; i <= 574; i++) {
       const q = ctx.FaraidhStore.getQuestionById(i);
+      if (i === 423) {
+        if (q) throw new Error("Q423 should be removed");
+        continue;
+      }
       if (!q) throw new Error(`Q${i} missing`);
       if (q.id !== i) throw new Error(`Q${i} id mismatch: ${q.id}`);
     }
@@ -453,9 +457,8 @@ console.log("\n=== 10. Answer Key Integrity ===");
     assert(q.answers.length >= 1, "Q250 has answers");
   });
 
-  test("Q423 is skippable (needsReview)", () => {
-    const q = ctx.FaraidhStore.getQuestionById(423);
-    assert(ctx.FaraidhStore.isSkippable(q), "Q423 skippable");
+  test("Q423 removed from matrix", () => {
+    assert(ctx.FaraidhStore.getQuestionById(423) === null, "Q423 not found");
   });
 
   test("validateAnswer works (Q1 with correct keys)", () => {
@@ -599,13 +602,13 @@ console.log("\n=== 13. Prev/Next Navigation ===");
     assert(elements["btn-prev"].onclick !== null, "btn-prev bound");
   });
 
-  test("Q422 → next skips review Q423 to Q424", () => {
+  test("Q422 → next goes to Q424 (Q423 removed)", () => {
     ctx.App.navigate("latihan/422");
     elements["btn-next"].onclick();
-    assert(ctx.App.session[0].id === 424, `skipped to ${ctx.App.session[0].id}`);
+    assert(ctx.App.session[0].id === 424, `next to ${ctx.App.session[0].id}`);
   });
 
-  test("Q424 → prev skips review Q423 back to Q422", () => {
+  test("Q424 → prev goes to Q422 (Q423 removed)", () => {
     ctx.App.navigate("latihan/424");
     elements["btn-prev"].onclick();
     assert(ctx.App.session[0].id === 422, `prev to ${ctx.App.session[0].id}`);

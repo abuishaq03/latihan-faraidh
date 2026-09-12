@@ -1,5 +1,5 @@
 // مصدر البيانات: المسائل الفرضية (1).docx
-// Diimpor dari faraidh_answer_key_574.json (574 soal)
+// Diimpor dari faraidh_answer_key_574.json (574 soal; Q423 dihapus)
 const FARAIDH_ANSWER_KEY = {
   "metadata": {
     "source": "المسائل الفرضية (1).docx",
@@ -7,10 +7,7 @@ const FARAIDH_ANSWER_KEY = {
     "source_last_numbered_entry": 575,
     "source_last_numbered_entry_is_blank": true,
     "methodology": "حساب تعليمي على طريقة الفرائض السنية العامة، مع اعتماد حجب الجد للإخوة في مواضع الخلاف، وتطبيق العول والرد والتعصيب والحجب.",
-    "important_note": "هذه مفاتيح تعليمية مولدة آليًا من تركيب الورثة في المصدر، وليست فتوى أو اعتمادًا نهائيًا لمسائل واقعية.",
-    "review_required": [
-      "المسألة رقم 423 في المصدر مكتوبة: أخت لأب/أخوات لأب، وهي صياغة غير محددة؛ لذلك لم يُخترع لها مفتاح."
-    ]
+    "important_note": "هذه مفاتيح تعليمية مولدة آليًا من تركيب الورثة في المصدر، وليست فتوى أو اعتمادًا نهائيًا لمسائل واقعية."
   },
   "sections": [
     "زوج",
@@ -14625,20 +14622,6 @@ const FARAIDH_ANSWER_KEY = {
       ],
       "notes": [],
       "needsReview": false
-    },
-    {
-      "id": 423,
-      "question": "أخت لأب/أخوات لأب",
-      "heirs": [
-        "أخوات لأب"
-      ],
-      "asalMasalah": 1,
-      "answers": [],
-      "notes": [
-        "وفيها رد",
-        "المسألة في المصدر مكتوبة بصيغة غير محددة: «أخت لأب/أخوات لأب»، لذلك لم يُخترع لها مفتاح."
-      ],
-      "needsReview": true
     },
     {
       "id": 424,
